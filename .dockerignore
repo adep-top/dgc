@@ -1,0 +1,9 @@
+node_modules/
+.adep/
+web/dist/
+.git/
+.env
+*.md
+!README.md
+docs/
+tests/

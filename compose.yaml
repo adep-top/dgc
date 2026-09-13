@@ -1,0 +1,43 @@
+# dgc 云柯点格棋 —— 独立部署编排（不依赖 adep 平台）
+# 单实例：副本数固定 1（本地模拟运行时单写者语义）。
+# 数据：.adep/sim/ 挂卷（db.json + storage 桶），容器重建不丢。
+#
+# 使用：
+#   docker compose up -d --build
+#   # 默认 http://localhost:8787 （可用 APP_PORT 覆盖宿主端口）
+
+services:
+  app:
+    build: .
+    container_name: dgc
+    restart: unless-stopped
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+    ports:
+      - "${APP_PORT:-8787}:8787"
+    environment:
+      - NODE_ENV=production
+      # 监听面固定容器内端口（对外映射走 APP_PORT）；serve：旗标 > 环境变量 > 内置缺省
+      - PORT=8787
+      - HOST=0.0.0.0
+      - ADEP_SERVE_STATIC_DIR=web/dist
+      - SINGLE_INSTANCE=true
+    env_file:
+      - .env
+    volumes:
+      # 模拟运行时持久化落 {cwd}/.adep/sim/ —— 挂卷数据才活得过容器重建
+      - dgc-data:/app/.adep
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8787/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  dgc-data:
+    driver: local

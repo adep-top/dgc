@@ -1,7 +1,7 @@
-# 云柯点格棋（adep 应用 · 开源镜像）
+# 云柯点格棋（adep 应用）
 
 微信小游戏「云柯点格棋」移植为 adep 平台应用：**functions/ 云函数 + web/ Canvas 前端**。
-界面/体验与原始小程序保持一致，代码结构为本地开发调试而设计。
+界面/体验与原始小程序保持一致；clone 后 `npm install` 即可一键跑起来，也可 Docker 独立部署。
 
 > 完整移植决策、平台缺陷修复记录、与原版差异见 [`docs/porting-notes.md`](docs/porting-notes.md)。
 
@@ -17,18 +17,18 @@
 
 本应用运行在 **adep 平台**之上（`@adep/cli` 提供 dev / serve / publish 等命令）。两种运行方式：
 
-1. **在 adep monorepo 内开发**（推荐，功能最全）：把本仓库放到 adep 仓库的 `apps/dgc/`，
-   由 monorepo 的 `pnpm-workspace.yaml` 统一管理依赖（`workspace:*`），`npm run dev` 一条命令起全部。
-2. **独立运行**（本开源镜像默认形态）：在仓库根执行
+1. **独立运行（推荐）**：依赖全部来自 npm registry，clone 后 `npm install` 即可：
 
    ```bash
-   pnpm install                      # 需先把 @adep/cli 等依赖指向已发布的 npm 版本
+   npm install
    npm run dev                       # vite + 进程内 adep dev（模拟运行时）
    npm run build && npm run start    # 本地独立部署（adep serve）
    ```
 
-   > 说明：仓库内 `@adep/cli` 以 `workspace:*` 声明，独立使用前请将其改为 npm 已发布版本
-   > （如 `"@adep/cli": "^0.1.9"`），或按方式 1 在 adep monorepo 中运行。
+   独立部署（Docker，不依赖 adep 平台）见下文「独立部署」章节。
+2. **在 adep monorepo 内开发**：把本仓库放到 adep 仓库的 `apps/dgc/`，
+   monorepo 的 `pnpm-workspace.yaml` 会把 `@adep/cli` / `@adep/types` 钉回仓库源码包
+   （依赖声明本身保持 registry 版本，与开源镜像逐字节一致），`npm run dev` 一条命令起全部。
 
 ## 目录结构
 
@@ -54,9 +54,10 @@ dgc/
 
 ## 本地开发
 
+前置：Node.js >= 18。clone 后先 `npm install`。
+
 ```bash
-cd apps/dgc            # 方式 1：adep monorepo 内
-pnpm install
+npm install
 
 # 一条命令起前端 + 云函数模拟运行时（函数改动热重载）：
 npm run dev
@@ -79,6 +80,39 @@ npm run dev
 | `npm run deploy` | 发布到 adep 平台（6 云函数 + 前端） |
 | `npm run test` | vitest 冒烟测试 |
 | `npm run typecheck` | tsc strict 类型检查 |
+
+## 独立部署（Docker，不依赖 adep 平台）
+
+工程自带 Docker 配置，可在任意装 Docker 的机器上自托管，无需 adep 平台。
+
+**架构**：单容器 = `adep serve`（本地模拟运行时，与平台同源执行器）承载云函数
+（`/api/*`）+ 静态托管前端（`web/dist` 挂到 `/`）+ 本地持久化（`.adep/sim/` 卷）。
+启动时自动应用 `functions/schema.sql` 建表（IF NOT EXISTS 幂等），数据挂卷不丢。
+
+```bash
+# 构建并启动（默认 http://localhost:8787）
+docker compose up -d --build
+
+# 或手动运行
+docker build -t dgc .
+docker run -d --name dgc -p 8787:8787 -v dgc-data:/app/.adep dgc
+```
+
+| 文件            | 作用                                        |
+| --------------- | ------------------------------------------- |
+| `Dockerfile`    | 多阶段构建：vite build 前端 → 运行时镜像    |
+| `compose.yaml`  | 单实例编排 + 数据卷 + 健康检查（/healthz）  |
+| `.dockerignore` | 构建上下文忽略清单（防宿主产物/密钥进镜像） |
+| `.env.example`  | 环境变量示例（复制为 `.env` 按需修改）      |
+
+本地不装 Docker 也能跑（依赖已由 `npm install` 装好）：
+
+```bash
+npm run build && npm run start
+# = adep serve --host 0.0.0.0 --schema functions/schema.sql --static ./web/dist --spa
+```
+
+浏览器访问 `http://127.0.0.1:8787`。
 
 ## 调试提示
 

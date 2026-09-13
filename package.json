@@ -20,9 +20,13 @@
     "frontend:sync": "adep frontend sync",
     "doctor": "adep doctor"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "devDependencies": {
-    "@adep/cli": "workspace:*",
-    "@adep/types": "workspace:*",
+    "@adep/cli": "^0.1.10",
+    "@adep/types": "^0.2.3",
+    "@types/bun": "1.3.14",
     "@vitejs/plugin-vue": "^6.0.0",
     "typescript": "5.9.3",
     "vite": "^7.0.0",
