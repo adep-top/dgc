@@ -1,0 +1,32 @@
+{
+  "name": "dgc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "云柯点格棋 —— 微信小游戏移植为 adep 应用（functions/ 云函数 + web/ Canvas 前端）",
+  "scripts": {
+    "dev": "vite -c web/vite.config.ts",
+    "dev:api": "adep dev",
+    "build": "vite build -c web/vite.config.ts",
+    "preview": "vite preview -c web/vite.config.ts",
+    "start": "adep serve --host 0.0.0.0 --schema functions/schema.sql --static ./web/dist --spa",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "db:init": "adep db start && adep db migrate functions/schema.sql",
+    "deploy": "adep publish",
+    "deploy:functions": "adep publish --only functions",
+    "deploy:frontend": "adep publish --only frontend",
+    "frontend:sync": "adep frontend sync",
+    "doctor": "adep doctor"
+  },
+  "devDependencies": {
+    "@adep/cli": "workspace:*",
+    "@adep/types": "workspace:*",
+    "@vitejs/plugin-vue": "^6.0.0",
+    "typescript": "5.9.3",
+    "vite": "^7.0.0",
+    "vitest": "^3.2.4",
+    "vue": "^3.5.42"
+  }
+}

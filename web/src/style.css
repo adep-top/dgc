@@ -1,0 +1,32 @@
+/* 云柯点格棋 web 壳：全屏 Canvas，禁止滚动/缩放，黑底 */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0f1218;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app,
+.dgc-stage {
+  width: 100%;
+  height: 100%;
+}
+
+.dgc-stage {
+  position: fixed;
+  inset: 0;
+}
+
+.dgc-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
