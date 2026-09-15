@@ -80,7 +80,6 @@ CREATE TABLE IF NOT EXISTS async_games (
   id            TEXT PRIMARY KEY,         -- 平台注入 ULID
   game_id       TEXT    UNIQUE NOT NULL,  -- 业务键（对局号）
   rows          INTEGER NOT NULL,
-  rows          INTEGER NOT NULL,
   cols          INTEGER NOT NULL,
   player1_uid   TEXT,
   player2_uid   TEXT,
