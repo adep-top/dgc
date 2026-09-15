@@ -23,9 +23,20 @@ export const clearLogin = () => {
 /** 构造带状态码的错误：上层据此区分「登录态失效(401)」与普通网络错误 */
 function httpError(res) {
   const data = res.data || {};
-  const err = new Error(data.message || data.error || `HTTP ${res.statusCode}`);
+  // 后端有两种错误体：函数级 err() 返回 {error: string, message: string}；
+  // 平台运行时错误（FN_EXEC_ERROR 等）返回 {error: {code, message}}。
+  // 两种都要把真实 message 透出来，不能 new Error(对象) 变成 "[object Object]"。
+  const errorObj = typeof data.error === 'object' && data.error !== null ? data.error : null;
+  const message =
+    (typeof data.message === 'string' && data.message) ||
+    (errorObj && typeof errorObj.message === 'string' && errorObj.message) ||
+    `HTTP ${res.statusCode}`;
+  const err = new Error(message);
   err.statusCode = res.statusCode;
-  err.code = data.error || '';
+  err.code =
+    (errorObj && typeof errorObj.code === 'string' && errorObj.code) ||
+    (typeof data.error === 'string' ? data.error : '') ||
+    '';
   return err;
 }
 
